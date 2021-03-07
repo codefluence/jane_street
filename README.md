@@ -59,38 +59,8 @@ The **response** variable (resp) represents the profit/loss per security unit in
 
 Responses at other time horizons (resp_1, resp_2, resp_3, resp_4) are also available but these won't be used in the evaluation metric.
 
-
-```python
-fig, ax = plt.subplots(figsize=(12, 4))
-
-resp= pd.Series(df['resp']).cumsum()
-resp_1= pd.Series(df['resp_1']).cumsum()
-resp_2= pd.Series(df['resp_2']).cumsum()
-resp_3= pd.Series(df['resp_3']).cumsum()
-resp_4= pd.Series(df['resp_4']).cumsum()
-ax.set_xlabel ("time", fontsize=12)
-ax.set_title ("Cumulative return", fontsize=12)
-
-resp.plot(lw=2, color='black')
-resp_1.plot(lw=0.7, color='powderblue')
-resp_2.plot(lw=0.7, color='skyblue')
-resp_3.plot(lw=0.7, color='royalblue')
-resp_4.plot(lw=0.7, color='navy')
-plt.legend(loc="upper left")
-
-plt.plot()
-```
-
-
-
-
-    []
-
-
-
-
     
-![png](output_5_1.png)
+![png](\img\output_5_1.png)
     
 
 
