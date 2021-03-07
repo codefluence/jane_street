@@ -235,7 +235,7 @@ PCA and an encoder/decoder network to **denoise** and compress the original feat
 batch_norm -> fully_connected -> leaky_relu -> dropout
 ```
 
-* Dropout set to high rates (0.35 in the 1st layer, 0.4 in the 1ns layer, 0.45 in the 1th layer). The same setup has been tested with lower dropout rates (0.2) and the validation score was just slightly better, so I kept the extra regularization.
+* Dropout set to high rates (0.35 in the 1st layer, 0.4 in the 2nd layer, 0.45 in the 3th layer). The same setup has been tested with lower dropout rates (0.2) and the validation score was just slightly better, so I kept the extra regularization.
 
 
 * Blending of pairs of data points as proposed in the paper [mixup: BEYOND EMPIRICAL RISK MINIMIZATION](https://arxiv.org/pdf/1710.09412v2.pdf). This way the new data points fill the "empty" space in the training data, which helps to soft the fitting. Also, with this technique is possible to learn the information in data points with weight=0. The blending proportion follows a beta distribution. I chose parameter values to make the distribution close to a uniform in order to increase the level of "mixup".
@@ -260,7 +260,7 @@ Another completely different idea I tried was to plug the utility score function
 
 Compared to the cross-entropy function, the utility score function already weights the importance of trade opportunities based on response and Jane Street weight. To soften the influence of the response values which would introduce quite a lot of overfitting, the utility score function is modified to randomly pick the response from different time horizons. This avoids overfitting in two ways: more predictable shorter time horizons and more time variability in the response.
 
-On top of that, noise was added to the response in proportion to its magnitude (standard deviation = response/*2).
+On top of that, noise was added to the response in proportion to its magnitude (standard deviation = response/2).
 
 Same layers, dropout rates and data blending technique used in the classification network is applied here, but in another attempt to make this model different and still reduce overfitting, the following features were used instead of the original ones:
 
