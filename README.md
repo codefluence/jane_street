@@ -1,25 +1,3 @@
-```python
-import pandas as pd
-import numpy as np
-import pickle
-
-from scipy.stats import beta
-from sklearn.preprocessing import StandardScaler
-
-from matplotlib.pyplot import figure
-from matplotlib import pyplot as plt
-import seaborn as sns
-
-import missingno as msno
-
-%matplotlib inline
-```
-
-
-```python
-df = pd.read_csv('D:/data/jane-street/train.csv')
-```
-
 # Jane Street Market Prediction
 
 [Jane Street](https://www.janestreet.com/), the sponsor of this [competition](https://www.kaggle.com/c/jane-street-market-prediction), is a *quantitative trading firm with a unique focus on technology and collaborative problem solving*. The challenge is to build a model that receives short-term trade opportunities and decides for each one whether to act and execute the opportunity or to dismiss it.
@@ -60,7 +38,7 @@ The **response** variable (resp) represents the profit/loss per security unit in
 Responses at other time horizons (resp_1, resp_2, resp_3, resp_4) are also available but these won't be used in the evaluation metric.
 
     
-![png](\img\output_5_1.png)
+![png](./img/output_5_1.png)
     
 
 
