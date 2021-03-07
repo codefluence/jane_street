@@ -199,7 +199,7 @@ I used the mean of the previous 100 trade opportunities (for the same feature_0 
 
 To fit the prediction models, the data was split in 4 folds, each one containing mutually exclusive days. The goal is to avoid day information leakage, since each day has its own particular mood and is impacted by financial news that only apply to that day. The model should not rely on the particular information of the day because it won't probably reproduce again in the future.
 
-Between keeping training and validation days as much as isolated as possible (first x days are for training, last y days are for validation) and trying to include as much time variance in the validation set as possible (spreading validation days across the whole period) I went for the latter. In my experiments I didn't find obvious overfitting caused by mixing validation days with training days. The critical part is to avoid trade opportunities from the same day on both training and validation.
+Between keeping training and validation days as much as isolated as possible (first x days are for training, last y days are for validation) and trying to include as much time variance in the validation set as possible (spreading validation days across the whole period) I went for the latter. In my experiments I didn't find obvious overfitting caused by mixing validation days with training days. The critical part is to avoid intraday data leakage.
 
 ```
 1st partition:
