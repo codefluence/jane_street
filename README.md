@@ -148,6 +148,8 @@ As described in the [evaluation description](https://www.kaggle.com/c/jane-stree
 
 $p_i = \sum_j(weight_{ij} * resp_{ij} * action_{ij})$
 
+<a href="https://www.codecogs.com/eqnedit.php?latex=p_i&space;=&space;\sum_j(weight_{ij}&space;*&space;resp_{ij}&space;*&space;action_{ij})" target="_blank"><img src="https://latex.codecogs.com/gif.latex?p_i&space;=&space;\sum_j(weight_{ij}&space;*&space;resp_{ij}&space;*&space;action_{ij})" title="p_i = \sum_j(weight_{ij} * resp_{ij} * action_{ij})" /></a>
+
 $t = \frac{\sum p_i }{\sqrt{\sum p_i^2}} * \sqrt{\frac{250}{|i|}}$
 
 *where  is the number of unique dates in the test set. The utility is then defined as:*
@@ -251,6 +253,8 @@ The utility score is based on the weighting provided by Jane Street and the resp
 min(jane street weight * abs(mean(responses from all time horizons)), 0.4)
 ```
 
+
+<br>
 
 ### Utility maximization model
 
