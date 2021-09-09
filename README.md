@@ -256,7 +256,7 @@ min(jane street weight * abs(mean(responses from all time horizons)), 0.4)
 
 ### Utility maximization model
 
-Another completely different idea I tried was to plug the utility score function directly as loss function (multiplied by -1 to maximize).
+Another completely different idea is to plug the utility score function directly as loss function (multiplied by -1 to maximize).
 
 Compared to the cross-entropy function, the utility score function already weights the importance of trade opportunities based on response and Jane Street weight. To soften the influence of the response values which would introduce quite a lot of overfitting, the utility score function is modified to randomly pick the response from different time horizons. This avoids overfitting in two ways: more predictable shorter time horizons and more time variability in the response.
 
@@ -278,9 +278,6 @@ To get the market trend/volatility of the day I fit linear models to the means/s
 
 ![png](./img/output_48_0.png)
     
-
-
-During inference, the means of the features of the last 100 trade opportunities (per side) is computed to feed to the linear models that will generate the predictions as features for the neural network. The error of these linear models is low because it's much easier to predict the market regime of the current day (information already contained in the historical data of the trades features) than to predict the trend and volatility of a single trade.
 
 The hope is to provide the network model with some context to each trade opportunity so it's able to somehow adjust the risk depending on the market regime and the divergence of the trade from that regime (Z-scores).
 

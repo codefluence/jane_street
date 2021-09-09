@@ -9,36 +9,46 @@ import torch
 from trend_net import TrendClassifier
 from utility_net import UtilityMaximizer
 
-
-# Loop that iterates through each trade opportunity that comes up in real time and sends an action to the Jane Street API
-
-def competition_loop(utility_max=0):
+# competition host API
+#import janestreet
 
 
-    print('loading models...')
 
-    trend_models = []
+def competition_loop(experimental=False):
+
+    '''
+    Loop that iterates through each trade opportunity that comes up in real time and sends an action to the Jane Street API
+    Rename the checkpoint files to use to trend_CV40.ckpt, trend_CV41.ckpt, ..., utility_CV40.ckpt, utility_CV41.ckpt, ...
+
+    experimental=False to use TrendClassifier model - getting 6th place in Kaggle competition
+    experimental=True to use UtilityMaximizer
+    '''
 
     torch.manual_seed(0)
     np.random.seed(0)
 
-    for cv_no in np.arange(4):
 
-        trend_model = TrendClassifier.load_from_checkpoint('./weights/trend_CV4'+str(cv_no)+'.ckpt', input_width=136)
-        trend_model.cpu()
-        trend_model.eval()
+    print('loading models...')
 
-        trend_models.append(trend_model)
-
-    utility_models = []
+    models = []
 
     for cv_no in np.arange(4):
 
-        utility_model = UtilityMaximizer.load_from_checkpoint('./weights/utility_CV4'+str(cv_no)+'.ckpt', input_width=134)
-        utility_model.cpu()
-        utility_model.eval()
+        if experimental:
 
-        utility_models.append(utility_model)
+            utility_model = UtilityMaximizer.load_from_checkpoint('./weights/utility_CV4'+str(cv_no)+'.ckpt', input_width=134)
+            utility_model.cpu()
+            utility_model.eval()
+
+            models.append(utility_model)
+
+        else:
+
+            trend_model = TrendClassifier.load_from_checkpoint('./weights/trend_CV4'+str(cv_no)+'.ckpt', input_width=136)
+            trend_model.cpu()
+            trend_model.eval()
+
+            models.append(trend_model)
 
 
     print('loading data...')
@@ -100,56 +110,55 @@ def competition_loop(utility_max=0):
             #env.predict(sample_prediction_df)
             continue
 
-        # Z-scores
-        chunk_val = cache_features[side_id]
-        chunk_mea = np.nanmean(chunk_val, axis=0)
-        chunk_std = np.nanstd(chunk_val, ddof=1, axis=0)
+        if experimental:
 
-        # std < 1e-6 is ignored for stability (with numbers close to 0, Z-scores go bananas)
-        tozero = np.isnan(chunk_std) | (chunk_std < 1e-3)
+            # Z-scores
+            chunk_val = cache_features[side_id]
+            chunk_mea = np.nanmean(chunk_val, axis=0)
+            chunk_std = np.nanstd(chunk_val, ddof=1, axis=0)
 
-        mask = np.ones(chunk_mea.shape, dtype=np.float32)
-        mask[tozero] = 0
-        chunk_mea[tozero] = 0
-        chunk_std[tozero] = 1
+            # std < 1e-6 is ignored for stability (with numbers close to 0, Z-scores go bananas)
+            tozero = np.isnan(chunk_std) | (chunk_std < 1e-3)
 
-        Z_scores = (features*mask - chunk_mea) / chunk_std
+            mask = np.ones(chunk_mea.shape, dtype=np.float32)
+            mask[tozero] = 0
+            chunk_mea[tozero] = 0
+            chunk_std[tozero] = 1
 
-        Z_scores[0] = features[0]
-        Z_scores[64] = features[64]
+            Z_scores = (features*mask - chunk_mea) / chunk_std
 
-        assert(np.isinf(Z_scores).sum() == 0)
-        assert(np.isnan(Z_scores).sum() == 0)
+            Z_scores[0] = features[0]
+            Z_scores[64] = features[64]
 
-        # interactions
-        interactions = np.column_stack((    
-                                            features[3] * features[45],
-                                            features[10] * features[122],
-                                            features[14] * features[58],
-                                            features[22] * features[42],
-                                            features[35] * features[20],
-                                            features[45] * features[47],
-                                        ))
+            assert(np.isinf(Z_scores).sum() == 0)
+            assert(np.isnan(Z_scores).sum() == 0)
 
-        features = np.concatenate(( features, interactions.squeeze() ))
+            chunk_trend = clf_day_trend.predict(chunk_mea.reshape(1,-1)).item()
+            chunk_volat = clf_day_volat.predict(chunk_mea.reshape(1,-1)).item()
 
-        # normalization
-        features[1:] = scaler.transform(features[1:].reshape(1,-1)).squeeze()
+        else:
 
-        # network models
+            # interactions
+            interactions = np.column_stack((    
+                                                features[3] * features[45],
+                                                features[10] * features[122],
+                                                features[14] * features[58],
+                                                features[22] * features[42],
+                                                features[35] * features[20],
+                                                features[45] * features[47],
+                                            ))
 
-        chunk_trend = clf_day_trend.predict(chunk_mea.reshape(1,-1)).item()
-        chunk_volat = clf_day_volat.predict(chunk_mea.reshape(1,-1)).item()
+            features = np.concatenate(( features, interactions.squeeze() ))
+
+            # normalization
+            features[1:] = scaler.transform(features[1:].reshape(1,-1)).squeeze()
 
         final_pred = 0.
 
         for cv_no in np.arange(4):
 
-            if not utility_max:
-                trend_model_input = torch.tensor(features, device='cpu').reshape(1,-1)
-                final_pred += torch.sigmoid(trend_models[cv_no](trend_model_input)).item()
+            if experimental:
 
-            else:
                 utility_model_input = torch.tensor(np.concatenate((  Z_scores,
                                                                     np.array([no_imputation_required]),
                                                                     np.array([weight]), 
@@ -157,7 +166,11 @@ def competition_loop(utility_max=0):
                                                                     np.array([chunk_volat], dtype=np.float32) ))
                                                                     , device='cpu').reshape(1,-1)
 
-            final_pred += torch.sigmoid(utility_models[cv_no](utility_model_input)).item()
+                final_pred += torch.sigmoid(models[cv_no](utility_model_input)).item()
+            else:
+
+                trend_model_input = torch.tensor(features, device='cpu').reshape(1,-1)
+                final_pred += torch.sigmoid(models[cv_no](trend_model_input)).item()
 
         this_goes_to_jane_street_API = ((final_pred/4) > 0.5)*1
         #sample_prediction_df.action = this_goes_to_jane_street_API
@@ -167,6 +180,8 @@ def competition_loop(utility_max=0):
 
     print('avg iteration time:', round(np.mean(times),2),'ms')
     print('total loop time:', round(time_log.time() - very_start),'seconds')
+
+
 
 
 if __name__ == '__main__':

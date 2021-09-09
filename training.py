@@ -68,9 +68,9 @@ def fit_model(model, percent_rows=None, num_rows=None, split='mixed10', batch_si
 
 if __name__ == '__main__':
 
-    for i in np.arange(4):
-        fit_model(TrendClassifier, split='CV4'+str(i), batch_size=4096)
-    
-    for i in np.arange(4):
-        fit_model(UtilityMaximizer, split='CV4'+str(i))
+    for model in TrendClassifier, UtilityMaximizer:
+
+        for i in np.arange(4):
+            
+            fit_model(model, split='CV4'+str(i))
 

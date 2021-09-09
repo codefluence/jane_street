@@ -3,6 +3,7 @@ import pickle
 import os.path
 import time
 import gc
+import json
 
 import pandas as pd
 import numpy as np
@@ -33,13 +34,18 @@ class JaneStreetDataModule(pl.LightningDataModule):
 
         features, context, Z_scores, no_imput_req, weights_nn, market_trend, market_volat, set_label = np.repeat(None, 8)
 
+        with open('./settings.json') as f:
+            settings = json.load(f)
+
+        prepro_file_path = settings['PREPRO_DATA_DIR'] + split + '.pkl'
+
         file_path = 'D:/data/jane-street/cache/'+split+'.pkl'
 
-        if os.path.isfile(file_path):
+        if os.path.isfile(prepro_file_path):
             
             print('loading data from cache file...')
 
-            with open(file_path,'rb') as f:
+            with open(prepro_file_path,'rb') as f:
 
                 array = pickle.load(f).astype(np.float32)
 
@@ -64,7 +70,7 @@ class JaneStreetDataModule(pl.LightningDataModule):
 
             is_train = (set_label=='train').astype(np.float32)
 
-            with open('D:/data/jane-street/cache/'+split+'.pkl','wb') as f:
+            with open(prepro_file_path,'wb') as f:
                 pickle.dump(np.hstack(( features, context, Z_scores,
                                         no_imput_req.reshape(-1,1),
                                         weights_nn.reshape(-1,1),
@@ -108,10 +114,13 @@ class JaneStreetDataModule(pl.LightningDataModule):
 
         print('reading data...')
 
+        with open('./settings.json') as f:
+            settings = json.load(f)
+
         if num_rows is None:
-            file_data = pd.read_csv('D:/data/jane-street/train.csv')
+            file_data = pd.read_csv(settings['RAW_DATA_PATH'])
         else:
-            file_data = pd.read_csv('D:/data/jane-street/train.csv', nrows=num_rows)
+            file_data = pd.read_csv(settings['RAW_DATA_PATH'], nrows=num_rows)
 
         if not percent_rows is None:
             np.random.seed(0)
@@ -369,11 +378,6 @@ class JaneStreetSampler(Sampler):
 
     def __len__(self):
         return self.num_batches
-
-
-if __name__ == '__main__':
-
-    data = JaneStreetDataModule()
 
 
 
